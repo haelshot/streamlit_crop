@@ -1,4 +1,3 @@
-
 import csv
 
 
@@ -10,15 +9,6 @@ column_headers = ["Year", "Month", "rainfall_mm", "max_temp", "min_temp", "mean_
 
 with open('test.txt', 'r') as file:
     data = [line.strip().split(',') for line in file]
-
-
-def write_txt(column_to_write: list):
-    with open('output.txt', 'a') as f:
-        for column in column_to_write:
-            if column != column_to_write[-1]:
-                file = f.writelines(column + ",")
-            else:
-                file = f.writelines(column + "\n")
     
 
 def transpose_list(read_txt_file) -> list:
