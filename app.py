@@ -124,48 +124,51 @@ def main():
         elif pred_page == "Upload Excel Spreadsheet".lower() or pred_page == "Upload CSV".lower():
             uploaded_file = st.file_uploader("Upload your file", type=["xlsx"])
 
-            if uploaded_file is not None:
-                file_type = "xlsx" if pred_page == "Upload Excel Spreadsheet".lower() else "csv"
-                saved_file_path = save_to_bin_folder(pd.read_excel(uploaded_file) if file_type == 'xlsx' else pd.read_csv(uploaded_file), file_type)
-                
-                if file_type == 'xlsx':
-                    convert_to_csv(saved_file_path)
-                    data = pd.read_csv('csv_preprocessing/bin/temp.csv', index_col=None)
-                    df = pd.read_csv('csv_preprocessing/bin/temp.csv', index_col=None)
-                    df  = df[['Year', 'Month', 'max_temp', 'min_temp', 'rel_humidity', 'rel_humidity.1', 'rainfall_mm', 'wind_speed', 'sunshine_hours', 'evaporation_mm']]
-                    df['Year'] = data.index
-                    df['Month'] = data['Year']
-                    df['rainfall_mm'] = data['Month']
-                    df['max_temp'] = data['rainfall_mm']
-                    df['min_temp'] = data['max_temp']
-                    df['rel_humidity'] = data['mean_temp']
-                    df['rel_humidity.1'] = data['rel_humidity'] 
-                    data['rel_humidity.1'] = df['wind_speed']
-                    df['sunshine_hours'] = data['wind_speed'] 
-                    df['evaporation_mm'] = data['sunshine_hours'] 
-
+            try:
+                if uploaded_file is not None:
+                    file_type = "xlsx" if pred_page == "Upload Excel Spreadsheet".lower() else "csv"
+                    saved_file_path = save_to_bin_folder(pd.read_excel(uploaded_file) if file_type == 'xlsx' else pd.read_csv(uploaded_file), file_type)
                     
-                    print(df.head())
-                    if st.button('Predict'):
-                        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
-                        df['Month'] = pd.to_numeric(df['Month'], errors='coerce')
-                        df['max_temp'] = pd.to_numeric(df['max_temp'], errors='coerce')
-                        df['min_temp'] = pd.to_numeric(df['min_temp'], errors='coerce')
-                        df['rel_humidity'] = pd.to_numeric(df['rel_humidity'], errors='coerce')
-                        df['rel_humidity.1'] = pd.to_numeric(df['rel_humidity.1'], errors='coerce')
-                        df['rainfall_mm'] = pd.to_numeric(df['rainfall_mm'], errors='coerce')
-                        df['wind_speed'] = pd.to_numeric(df['wind_speed'], errors='coerce')
-                        df['sunshine_hours'] = pd.to_numeric(df['sunshine_hours'], errors='coerce')
-                        df['evaporation_mm'] = pd.to_numeric(df['evaporation_mm'], errors='coerce')
+                    if file_type == 'xlsx':
+                        convert_to_csv(saved_file_path)
+                        data = pd.read_csv('csv_preprocessing/bin/temp.csv', index_col=None)
+                        df = pd.read_csv('csv_preprocessing/bin/temp.csv', index_col=None)
+                        df  = df[['Year', 'Month', 'max_temp', 'min_temp', 'rel_humidity', 'rel_humidity.1', 'rainfall_mm', 'wind_speed', 'sunshine_hours', 'evaporation_mm']]
+                        df['Year'] = data.index
+                        df['Month'] = data['Year']
+                        df['rainfall_mm'] = data['Month']
+                        df['max_temp'] = data['rainfall_mm']
+                        df['min_temp'] = data['max_temp']
+                        df['rel_humidity'] = data['mean_temp']
+                        df['rel_humidity.1'] = data['rel_humidity'] 
+                        data['rel_humidity.1'] = df['wind_speed']
+                        df['sunshine_hours'] = data['wind_speed'] 
+                        df['evaporation_mm'] = data['sunshine_hours'] 
 
-                        df.fillna(df.mean(), inplace=True)
                         
-                        X_input = df.values.reshape((df.shape[0], 1, df.shape[1]))
-                        lstm_prediction = lstm_model.predict(X_input)
-                        prediction_df = create_prediction_df(df, lstm_prediction)
+                        print(df.head())
+                        if st.button('Predict'):
+                            df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
+                            df['Month'] = pd.to_numeric(df['Month'], errors='coerce')
+                            df['max_temp'] = pd.to_numeric(df['max_temp'], errors='coerce')
+                            df['min_temp'] = pd.to_numeric(df['min_temp'], errors='coerce')
+                            df['rel_humidity'] = pd.to_numeric(df['rel_humidity'], errors='coerce')
+                            df['rel_humidity.1'] = pd.to_numeric(df['rel_humidity.1'], errors='coerce')
+                            df['rainfall_mm'] = pd.to_numeric(df['rainfall_mm'], errors='coerce')
+                            df['wind_speed'] = pd.to_numeric(df['wind_speed'], errors='coerce')
+                            df['sunshine_hours'] = pd.to_numeric(df['sunshine_hours'], errors='coerce')
+                            df['evaporation_mm'] = pd.to_numeric(df['evaporation_mm'], errors='coerce')
 
-                        st.write(prediction_df)
-                        clear_bin_folder()
+                            df.fillna(df.mean(), inplace=True)
+                            
+                            X_input = df.values.reshape((df.shape[0], 1, df.shape[1]))
+                            lstm_prediction = lstm_model.predict(X_input)
+                            prediction_df = create_prediction_df(df, lstm_prediction)
+
+                            st.write(prediction_df)
+                            clear_bin_folder()
+            except:
+                st.write('Error reading excel file, confirm you are uploading the right dataset')
 
     elif page == "About":
         st.header("About This App")
