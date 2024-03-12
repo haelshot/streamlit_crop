@@ -167,8 +167,8 @@ def main():
 
                             st.write(prediction_df)
                             clear_bin_folder()
-            except:
-                st.write('Error reading excel file, confirm you are uploading the right dataset')
+            except Exception as e:
+                st.write(f'Error reading excel file, confirm you are uploading the right dataset {e}')
 
     elif page == "About":
         st.header("About This App")
