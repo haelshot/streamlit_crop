@@ -1,10 +1,10 @@
 import pandas as pd
 import csv
 
-def convert_to_csv(filepath):
+def convert_to_txt(filepath):
     # Define input and output filenames
     input_file = filepath
-    output_file = 'output.txt'
+    output_file = 'csv_preprocessing/bin/temp.txt'
 
     # Read the XLSX file into a pandas DataFrame
     df = pd.read_excel(input_file)
@@ -15,72 +15,58 @@ def convert_to_csv(filepath):
     print("Conversion complete! Your CSV file is saved as:", output_file)
 
 
+def remove(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+
+    new_lines = []
+    is_jan = False
+
+    for line in lines:
+        if 'JAN' in line:
+            is_jan = True
+            # Skip appending the current line and the last three lines
+            if len(new_lines) >= 3:
+                new_lines = new_lines[:-3]
+        else:
+            is_jan = False
+            # Append the line to the new_lines list
+            new_lines.append(line)
+
+    # Write the modified content back to the file
+    with open(filename, 'w') as file:
+        file.writelines(new_lines)
+
+    print("Rows with 'JAN' and 3 rows before each occurrence have been removed.")
+
 def clean_up_data(filepath):
-
-    with open(filepath) as f:
-        data = f.read()
+    convert_to_txt(filepath)
+    remove('csv_preprocessing/bin/temp.txt')
+    with open('csv_preprocessing/bin/temp.txt') as f:
+        data = f.readlines()
     # Split data into lines and extract header and rows
-    lines = data.strip().split('\n')
-    header = lines[0].split(',')
-    rows = [line.split(',') for line in lines[1:]]
-
-    # Create a list to store the transformed data
-    transformed_data = []
-
-    # Process each row and create a dictionary for each entry
-    for row in rows:
-        entry = {
-            'year': row[0].split('(')[1].replace(')', '') if row[0].startswith('VARIABLES') else '',
-            'month': row[0].split('(')[0] if row[0].startswith('VARIABLES') else row[0],
-        }
-
-        # Add the remaining values to the dictionary
-        entry.update(zip(header[1:], row[1:]))
-        transformed_data.append(entry)
+    processed_data = []
+    for line in data:
+        # Split the line into columns
+        columns = line.strip().split(',')
         
+        # Remove the first column
+        columns = columns[1:]
+        
+        # Ensure there are 12 columns
+        if len(columns) < 12:
+            # If there are fewer than 12 columns, add empty columns
+            columns.extend([''] * (12 - len(columns)))
+        elif len(columns) > 12:
+            # If there are more than 12 columns, truncate the excess
+            columns = columns[:12]
+        
+        # Join the columns back into a line
+        processed_line = ','.join(columns)
+        
+        # Append the processed line to the result
+        processed_data.append(processed_line)
 
-    # Create a DataFrame from the transformed data
-    df = pd.DataFrame(transformed_data)
-    try:
-        df = df.drop(columns=['month', 'Unnamed: 13', 'Unnamed: 14',
-        'Unnamed: 15', 'Unnamed: 16', 'Unnamed: 17', 'Unnamed: 18',
-        'Unnamed: 19', 'Unnamed: 20', 'Unnamed: 21'])
-    except:
-        df = df.drop('month', axis=1)
-
-    # Save the DataFrame to a CSV file
-    df.to_csv('output.csv', index=False, header=False)
-
-
-def get_correct_columns(filepath):
-    input_file_path = filepath
-    output_file_path = 'output_data.csv'
-
-    # Open the input file and create a CSV writer for the output file
-    with open(input_file_path, 'r') as input_file, open(output_file_path, 'w', newline='') as output_file:
-        csv_writer = csv.writer(output_file)
-
-        # Write header to the CSV file
-        csv_writer.writerow(["Year", "Month", "RAINFALL (mm)", "MAX. TEMP. (°C)", "MIN. TEMP. (°C)", "MEAN TEMP. (°C)",
-                            "REL. HUMIDITY morn (%)", "REL. HUMIDITY eve (%)", "WIND SPEED (km/day)", "SUNSHINE (hours)",
-                            "EVAPORATION (mm)", "SOIL TEMP. (°C) 50cm", "SOIL TEMP. (°C) 30cm", "SOIL TEMP. (°C) 20cm",
-                            "SOIL TEMP. (°C) 10cm", "SOIL TEMP. (°C) 5cm"])
-
-        # Initialize variables
-        year = 2008
-        month_index = 0
-
-        # Read data from the input file
-        for line in input_file:
-            values = line.strip().split(',')
-
-            # Increment month and reset to January if it exceeds December
-            month_index += 1
-            if month_index > 12:
-                month_index = 1
-                year += 1
-
-            # Write a new row to the CSV file
-            csv_writer.writerow([year, month_index] + values)
-
-    print("CSV file has been created successfully.")
+    # Write the processed data to the output file
+    with open('csv_preprocessing/bin/temp.txt', 'w') as output_file:
+        output_file.writelines('\n'.join(processed_data))
